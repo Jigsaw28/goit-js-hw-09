@@ -1,40 +1,71 @@
 import flatpickr from "flatpickr";
 import "flatpickr/dist/flatpickr.min.css";
+import Notiflix, { Report } from 'notiflix';
 
-const inputEl = document.querySelector("input#datetime-picker");
-const btnEl = document.querySelector("button[data-start]");
+const inputEl = document.querySelector('#datetime-picker');
+const btnEl = document.querySelector('[data-start]');
+const daysEl = document.querySelector('[data-days]');
+const hoursEl = document.querySelector('[data-hours]');
+const minutesEl = document.querySelector('[data-minutes]');
+const secondsEl = document.querySelector('[data-seconds]');
+
+let choiceDate = null;
 let timerId = null;
+
+btnEl.setAttribute('disabled', true);
+btnEl.addEventListener('click', onBtnClick);
+
 const options = {
   enableTime: true,
   time_24hr: true,
   defaultDate: new Date(),
   minuteIncrement: 1,
-    onClose(selectedDates) {
-        if (selectedDates[0].getTime() < Date.now()) { 
-            window.alert("Please choose a date in the future")
-        } 
-        btnEl.disabled = false;
-        console.log(selectedDates[0]);
-
+  onClose(selectedDates) {
+      console.log(selectedDates[0]);
+      onChoice(selectedDates[0]);
   },
 };
 flatpickr(inputEl, options);
 
 
-
-btnEl.disabled = true;
-
-btnEl.addEventListener('click', onBtnClick);
+function onChoice(selectedDates) {
+    choiceDate = selectedDates.getTime();
+    if (selectedDates < Date.now()) {
+        Notiflix.Report.failure("Please choose a date in the future")
+        btnEl.setAttribute('disabled', true)
+    } else if (selectedDates >= Date.now()) {
+        btnEl.removeAttribute('disabled')
+    }
+};
 
 function onBtnClick() {
-    const selectedTime = Date.now();
-    console.log(selectedTime)
+    timerId = setInterval(onTimerStart, 1000);
+    btnEl.setAttribute('disabled', true)
+}
 
-    timerId = setInterval(() => {
-        const currentTime = Date.now();
-        const deltaTime = selectedTime - currentTime;
-        console.log(deltaTime)
-    }, 1000)
+
+function onTimerStart() {
+    const deltaTime = choiceDate - Date.now();
+    const timeComponents = convertMs(deltaTime);
+    const { days, hours, minutes, seconds } = timeComponents
+    
+    hoursEl.textContent = addLeadingZero(hours);
+    minutesEl.textContent = addLeadingZero(minutes);
+    secondsEl.textContent = addLeadingZero(seconds);
+    if (daysEl.textContent > days) {
+        daysEl.textContent = days;
+    };
+    daysEl.textContent = addLeadingZero(days);
+
+     if (daysEl.textContent === "00" && hoursEl.textContent === "00" && minutesEl.textContent === "00" && secondsEl.textContent === "00") {
+         Notiflix.Report.success("Time is Over")
+         clearInterval(timerId)
+         btnEl.removeAttribute('disabled')
+    };
+}
+
+function addLeadingZero(value) {
+    return String(value).padStart(2, "0")
 }
 
 
