@@ -20,7 +20,7 @@ function createPromise(position, delay) {
 function onSubmitForm(event) {
   event.preventDefault();
   let delayTime = Number(formEl.delay.value);
-  for (i = 1; i <= formEl.amount.value; i += 1) {
+  for (let i = 1; i <= formEl.amount.value; i += 1) {
     createPromise(i, delayTime)
       .then(({ position, delay }) => {
         Notiflix.Notify.success(`Fulfilled promise ${position} in ${delay}ms`);
